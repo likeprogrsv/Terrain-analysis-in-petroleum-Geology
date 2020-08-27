@@ -13,19 +13,20 @@ public class MakeImilorGrid : MonoBehaviour
 
     Vector3[] vertices;
     int[] triangles;
+    Vector2[] uvs;
 
     string filePath = @"E:\Unity3D\__Unity3D_Projects__\Imilor Grid in Unity3D\Imilor Grid in Unity\GridSFile\H_T_step_50m.is-txt";            //Otr_goriz_A___step_50m_H_A_260716         //Imilor_Ach3_2
 
-
+    public Material material;
     //grid settings(parameters)
     public float cellsize = 1;                               //ReadGridFromFile.stepX;
     //public Vector3 gridOffset;
-    int gridSizeX;                                   //ReadGridFromFile.countX;
-    int gridSizeY;                                    //ReadGridFromFile.countY;
+    public int gridSizeX;                                   //ReadGridFromFile.countX;
+    public int gridSizeY;                                    //ReadGridFromFile.countY; 
 
     float xMin;
     float yMin;
-    float cutCoordValues = 10f;
+    float cutCoordValues = 100f;        //Cutting very large grid starting coordinates values
 
     float[] zValues;
     int gridMultiplier;
@@ -56,8 +57,8 @@ public class MakeImilorGrid : MonoBehaviour
         Debug.Log("Xmin: " + xMin + " Ymin: " + yMin);
         Debug.Log("Reading file is DONE");
 
-        transform.Translate(xMin / cutCoordValues, 0, yMin / cutCoordValues);
-       
+        transform.Translate(xMin / cutCoordValues, 0, yMin / cutCoordValues);       //Setting starting coordinates values from grid settings
+
 
         if (GridMultiplier == gridMultipl.PositiveGridValues)
         {
@@ -70,7 +71,10 @@ public class MakeImilorGrid : MonoBehaviour
 
 
         GetCountXY();
-        MakeGrid();
+        MakeGrid();        
+
+        CreateNormalMap();
+
         UpdateMesh();
         //SaveMeshAsAsset();
 
@@ -103,6 +107,7 @@ public class MakeImilorGrid : MonoBehaviour
         //setting array sizes
         vertices = new Vector3[(gridSizeX + 1) * (gridSizeY + 1)];        
         triangles = new int[gridSizeX * gridSizeY * 6];
+        uvs = new Vector2[vertices.Length];
 
         //set tracker integers
         int v = 0;
@@ -114,22 +119,18 @@ public class MakeImilorGrid : MonoBehaviour
         //create vertex grid
         //In Unity coordinate system vertical axis is "y-axis" instead of "z-axis"
 
-        float xTemp;
-        float zTemp;    //or mentally "yTemp"
+        
         for (int z = 0; z <= gridSizeY; z++)        //for (int x = 0; x <= gridSizeX; x++)  
         {
-            zTemp = (yMin + z * cellsize) / cutCoordValues;
-            for (int x = 0; x <= gridSizeX; x++)        //for (int y = 0; y <= gridSizeY; y++)   
-            {
-                xTemp = (xMin + x * cellsize) / cutCoordValues;
-                vertices[v] = new Vector3(xTemp - vertexOffset, gridMultiplier * zValues[v], zTemp - vertexOffset);
-                v++;
-                
-            }
             
-
+            for (int x = 0; x <= gridSizeX; x++)        //for (int y = 0; y <= gridSizeY; y++)   
+            {                
+                vertices[v] = new Vector3(x * cellsize, gridMultiplier * zValues[v], z * cellsize);     //in previous version used "(x * cellsize) - vertexOffset"
+                uvs[v] = new Vector2(vertices[v].x / (float)gridSizeX / cellsize, vertices[v].z / (float)gridSizeY / cellsize);
+                v++;                
+            }
         }
-
+        
         //reset vertex tracker
         v = 0;
 
@@ -165,9 +166,115 @@ public class MakeImilorGrid : MonoBehaviour
                                                                                 //Default index format is 16 bit, since that takes less memory and bandwidth.
         mesh.vertices = vertices;
         mesh.triangles = triangles;
+        mesh.uv = uvs;
         mesh.RecalculateNormals();
     }
 
 
+    float GetNormalizedHeight(int x, int z)
+    {
 
+        //Debug.Log("X: " + x + "  Z: " + z);
+
+        x = Mathf.Clamp(x, 0, gridSizeX);       //x = Mathf.Clamp(x, 0, xSize - 1);
+        z = Mathf.Clamp(z, 0, gridSizeY);
+
+        /*
+        Debug.Log("==============================");
+        Debug.Log("X: " + x + "  Z: " + z);
+        Debug.Log(x + z * (xSize + 1));
+        Debug.Log(vertices[x + z * (xSize + 1)].y);
+        Debug.Log("==============================");
+        */
+
+        return vertices[x + z * (gridSizeX + 1)].y;       //Take y-cordinate value (i.e. height) at point(x,0,z)
+    }
+
+    float GetHeight(int x, int z)
+    {
+        return GetNormalizedHeight(x, z);       //* m_terrainHeight
+    }
+
+
+    public Vector2 GetFirstDerivative(int x, int z)
+    {
+        float w = cellsize;
+        float y1 = GetHeight(x - 1, z + 1);
+        float y2 = GetHeight(x + 0, z + 1);
+        float y3 = GetHeight(x + 1, z + 1);
+        float y4 = GetHeight(x - 1, z + 0);
+        float y6 = GetHeight(x + 1, z + 0);
+        float y7 = GetHeight(x - 1, z - 1);
+        float y8 = GetHeight(x + 0, z - 1);
+        float y9 = GetHeight(x + 1, z - 1);
+
+        /*
+        Debug.Log("------------------------------");
+        Debug.Log(y1);
+        Debug.Log(y2);
+        Debug.Log(y3);
+        Debug.Log(y4);
+        Debug.Log(y6);
+        Debug.Log(y7);
+        Debug.Log(y8);
+        Debug.Log(y9);
+        Debug.Log("------------------------------");
+        */
+
+        // Find derivatives p (dy/dx), q (dy/dz) using Evans-Young method
+        float yx = (y3 + y6 + y9 - y1 - y4 - y7) / (6.0f * w);
+        float yz = (y1 + y2 + y3 - y7 - y8 - y9) / (6.0f * w);
+
+        /*
+        Debug.Log("______________________________");
+        Debug.Log(yx);
+        Debug.Log(yz);
+        Debug.Log("______________________________");
+        */
+        return new Vector2(-yx, -yz);
+    }
+
+
+    public void CreateNormalMap()
+    {
+        Texture2D normalMap = new Texture2D(gridSizeX, gridSizeY);
+
+        for (int z = 0; z < gridSizeY; z++)
+        {
+            for (int x = 0; x < gridSizeX; x++)
+            {
+
+                //Debug.Log("X: " + x + "  Z: " + z);
+                // Debug.Log("~~~~~~~~~~~~~~~~~~~");
+
+
+                Vector2 d1 = GetFirstDerivative(x, z);
+
+                //Not to sure of the orientation.
+                //Might need to flip x or y
+
+                var n = new Vector3();
+
+                /*
+                n.x = d1.x * 0.5f + 0.5f;
+                n.y = 1f;
+                n.z = -d1.y * 0.5f + 0.5f;               
+                */
+
+                n.x = d1.x * 0.5f + 0.5f;
+                n.y = -d1.y * 0.5f + 0.5f;
+                n.z = 1.0f;
+
+
+                n.Normalize();
+
+                //Debug.Log(n);
+
+                normalMap.SetPixel(x, z, new Color(n.x, n.y, n.z, 1f));
+            }
+        }
+
+        normalMap.Apply();
+        material.mainTexture = normalMap;
+    }
 }
