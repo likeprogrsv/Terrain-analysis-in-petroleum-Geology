@@ -12,7 +12,7 @@ using UnityEngine;
 
 public class ReadGridFromFile           //was ": MonoBehaviour"
 {
-    public static string filePath = @"E:\Unity3D\__Unity3D_Projects__\Imilor Grid in Unity3D\Imilor Grid in Unity\GridSFile\Imilor_Ach3_2.is-txt";    //Imilor_Ach3_2.is-txt
+    public static string filePath = @"D:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\Imilor_Ach3_2.is-txt";    //Imilor_Ach3_2.is-txt
     static string dataList;
 
     public static float[] dataArrayValues;

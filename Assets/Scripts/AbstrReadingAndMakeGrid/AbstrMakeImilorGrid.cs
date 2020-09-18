@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEditor;
 
 
-[RequireComponent (typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
-public class MakeImilorGrid : MonoBehaviour
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
+public abstract class AbstrMakeImilorGrid : MonoBehaviour
 {
 
     Mesh mesh;
@@ -15,7 +15,7 @@ public class MakeImilorGrid : MonoBehaviour
     int[] triangles;
     Vector2[] uvs;
 
-    string filePath = @"D:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\Imilor_Ach3_2.is-txt";            //Otr_goriz_A___step_50m_H_A_260716         //Imilor_Ach3_2
+    string filePath = @"D:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\H_A_step_50m.is-txt";            //Otr_goriz_A___step_50m_H_A_260716         //Imilor_Ach3_2
 
     public Material material;
     //grid settings(parameters)
@@ -32,19 +32,20 @@ public class MakeImilorGrid : MonoBehaviour
     int gridMultiplier;
 
 
-    public enum gridMultipl {
+    public enum gridMultipl
+    {
         NegativeGridValues = 0,
         PositiveGridValues = 1
     };
 
     public gridMultipl GridMultiplier = gridMultipl.NegativeGridValues;
-       
+
 
     //Use this for initialization
     void Awake()
     {
         mesh = GetComponent<MeshFilter>().mesh;
-      
+
     }
 
     void Start()
@@ -71,9 +72,9 @@ public class MakeImilorGrid : MonoBehaviour
 
 
         GetCountXY();
-        MakeGrid();        
-
-        //CreateNormalMap();
+        MakeGrid();
+        ////////////CreateNormalMap();
+        CreateMap();
 
         UpdateMesh();
         //SaveMeshAsAsset();
@@ -105,7 +106,7 @@ public class MakeImilorGrid : MonoBehaviour
     void MakeGrid()
     {
         //setting array sizes
-        vertices = new Vector3[(gridSizeX + 1) * (gridSizeY + 1)];        
+        vertices = new Vector3[(gridSizeX + 1) * (gridSizeY + 1)];
         triangles = new int[gridSizeX * gridSizeY * 6];
         uvs = new Vector2[vertices.Length];
 
@@ -119,18 +120,18 @@ public class MakeImilorGrid : MonoBehaviour
         //create vertex grid
         //In Unity coordinate system vertical axis is "y-axis" instead of "z-axis"
 
-        
+
         for (int z = 0; z <= gridSizeY; z++)        //for (int x = 0; x <= gridSizeX; x++)  
         {
-            
+
             for (int x = 0; x <= gridSizeX; x++)        //for (int y = 0; y <= gridSizeY; y++)   
-            {                
+            {
                 vertices[v] = new Vector3(x * cellsize, gridMultiplier * zValues[v], z * cellsize);     //in previous version used "(x * cellsize) - vertexOffset"
                 uvs[v] = new Vector2(vertices[v].x / (float)gridSizeX / cellsize, vertices[v].z / (float)gridSizeY / cellsize);
-                v++;                
+                v++;
             }
         }
-        
+
         //reset vertex tracker
         v = 0;
 
@@ -146,7 +147,7 @@ public class MakeImilorGrid : MonoBehaviour
                 v++;
                 t += 6;
             }
-            v++;        
+            v++;
         }
 
 
@@ -157,7 +158,7 @@ public class MakeImilorGrid : MonoBehaviour
         AssetDatabase.CreateAsset(mesh, "Assets/PrefabGrid.obj");
         AssetDatabase.SaveAssets();
     }
-            
+
 
     void UpdateMesh()
     {
@@ -169,6 +170,8 @@ public class MakeImilorGrid : MonoBehaviour
         mesh.uv = uvs;
         mesh.RecalculateNormals();
     }
+
+    protected abstract void CreateMap();                        // Create the map. Update to derivered class to implement.
 
 
     float GetNormalizedHeight(int x, int z)
