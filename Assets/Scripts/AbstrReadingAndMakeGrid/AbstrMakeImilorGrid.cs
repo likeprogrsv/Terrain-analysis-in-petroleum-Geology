@@ -21,14 +21,14 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     //grid settings(parameters)
     public float cellsize = 1;                               //ReadGridFromFile.stepX;
     //public Vector3 gridOffset;
-    public int gridSizeX;                                   //ReadGridFromFile.countX;
-    public int gridSizeY;                                    //ReadGridFromFile.countY; 
+    public int gridSizeX;                                    //Grid width            ReadGridFromFile.countX;
+    public int gridSizeY;                                    //Grid height           ReadGridFromFile.countY; 
 
     float xMin;
     float yMin;
     float cutCoordValues = 100f;        //Cutting very large grid starting coordinates values
 
-    float[] zValues;
+    public float[] zValues;
     int gridMultiplier;
 
 
