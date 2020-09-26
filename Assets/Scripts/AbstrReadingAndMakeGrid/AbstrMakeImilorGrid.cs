@@ -24,6 +24,9 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     public int gridSizeX;                                    //Grid width            ReadGridFromFile.countX;
     public int gridSizeY;                                    //Grid height           ReadGridFromFile.countY; 
 
+    public int gridSizeXactual;                              //actual width size (X-coord) in origin file
+    public int gridSizeYactual;                              //actual height size (Z-coord or Y) in origin file
+
     float xMin;
     float yMin;
     float cutCoordValues = 100f;        //Cutting very large grid starting coordinates values
@@ -97,6 +100,10 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     {
         gridSizeX = ReadGridFromFile.countX - 1;
         gridSizeY = ReadGridFromFile.countY - 1;
+
+        gridSizeXactual = gridSizeX + 1;
+        gridSizeYactual = gridSizeY + 1;
+
         zValues = ReadGridFromFile.dataArrayValues;
 
         Debug.Log("CountX in GetCountXY: " + gridSizeX + "\nCountY: " + gridSizeY);
