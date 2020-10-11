@@ -8,7 +8,7 @@ public class SaveMeshInEditor : MonoBehaviour
 {
 
     public KeyCode saveKey = KeyCode.F12;
-    public string saveName = "SavedMesh";
+    public string saveName = "100x_smoothed_Otr_gor_A_Imilor";
     public Transform selectedGameObject;
 
     void Update()

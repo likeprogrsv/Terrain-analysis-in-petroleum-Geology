@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 61732579}
   - component: {fileID: 61732578}
   - component: {fileID: 61732577}
+  - component: {fileID: 61732582}
   m_Layer: 0
   m_Name: CreateFlowImilor
   m_TagString: Untagged
@@ -153,7 +154,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a598fe48c5b921449bc8eff03ce1bbdb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  smoothTerrain: 1
+  numberOfSmoothingIterations: 10
   material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
+  coloredGradient: 0
   cellsize: 5
   gridSizeX: 0
   gridSizeY: 0
@@ -238,6 +242,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &61732582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 61732576}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce34a96bf666b1a4d82437e3bf1cb9b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  saveKey: 293
+  saveName: 100x_smoothed_Otr_gor_A_Imilor
+  selectedGameObject: {fileID: 61732581}
 --- !u!1 &612331173
 GameObject:
   m_ObjectHideFlags: 0
@@ -516,6 +535,85 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1387638717
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1387638720}
+  - component: {fileID: 1387638719}
+  - component: {fileID: 1387638718}
+  m_Layer: 0
+  m_Name: 100x_smoothed_Otr_gor_A_Imilor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &1387638718
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1387638717}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: f871306b0a805ad439ff84eb5f568530, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!33 &1387638719
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1387638717}
+  m_Mesh: {fileID: 4300000, guid: e072ee167dffaa2438d4e6b7016423f5, type: 2}
+--- !u!4 &1387638720
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1387638717}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1425651956
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,35 +4,48 @@ using UnityEngine;
 using UnityEditor;
 
 
+public enum VISUALIZE_GRADIENT { WARM, COOL, COOL_WARM, GREY_WHITE, GREY_BLACK, BLACK_WHITE };
+
+
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public abstract class AbstrMakeImilorGrid : MonoBehaviour
 {
 
-    Mesh mesh;
+    protected Mesh mesh;
     ReadGridFromFile readGridFromFile = new ReadGridFromFile();
 
-    Vector3[] vertices;
-    int[] triangles;
+    protected Vector3[] vertices;
+    protected int[] triangles;
     Vector2[] uvs;
 
-    string filePath = @"D:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\H_A_step_50m.is-txt";            //Otr_goriz_A___step_50m_H_A_260716         //Imilor_Ach3_2
+    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\OG_A_(10+15)_subtruct_OG_T(10+15)100m.is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
 
-    public Material material;
+    public bool smoothTerrain;
+    public int numberOfSmoothingIterations = 2;
+
+    public Material material;       //Grid(or mesh) material
+    public bool coloredGradient;
+
     //grid settings(parameters)
-    public float cellsize = 1;                               //ReadGridFromFile.stepX;
+    public float cellsize = 50;                               //ReadGridFromFile.stepX;
     //public Vector3 gridOffset;
-    public int gridSizeX;                                    //Grid width            ReadGridFromFile.countX;
-    public int gridSizeY;                                    //Grid height           ReadGridFromFile.countY; 
+    protected int gridSizeX;                                    //Grid width            ReadGridFromFile.countX;
+    protected int gridSizeY;                                    //Grid height           ReadGridFromFile.countY; 
 
-    public int gridSizeXactual;                              //actual width size (X-coord) in origin file
-    public int gridSizeYactual;                              //actual height size (Z-coord or Y) in origin file
+    protected int gridSizeXactual;                              //actual width size (X-coord) in origin file
+    protected int gridSizeYactual;                              //actual height size (Z-coord or Y) in origin file
 
     float xMin;
     float yMin;
     float cutCoordValues = 100f;        //Cutting very large grid starting coordinates values
 
-    public float[] zValues;
+    protected float[] zValues;
     int gridMultiplier;
+    protected float minTerrainHeight = 9999;
+    protected float maxTerrainHeight = -9999;
+
+    private Texture2D gradient, posGradient, negGradient;
+    protected bool currentColorMode;
 
 
     public enum gridMultipl
@@ -74,24 +87,62 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         }
 
 
-        GetCountXY();
+        GetCountXY();        
         MakeGrid();
-        ////////////CreateNormalMap();
+
+        ////////////CreateNormalMap(); 
+
+
+        // Create color gradient
+        currentColorMode = coloredGradient;
+        CreateGradients(coloredGradient);        
+
+
+
+        //Smooth terrain if you need
+        if (smoothTerrain)
+        {
+            for (int i = 0; i < numberOfSmoothingIterations; i++)
+            {                
+                SmoothHeightMap();                
+            }
+            MakeGrid();
+        }
+            
         CreateMap();
 
-        UpdateMesh();
-        //SaveMeshAsAsset();
+        if(!ColorizeHeightMap())
+            UpdateMesh();
+
+
+        //if(saveGridAsAsset) SaveMeshAsAsset();            //It doesn't works
 
         Debug.Log("Vertex count: " + mesh.vertexCount);
         Debug.Log("Vertex arr length: " + vertices.Length);
         Debug.Log("Triangles arr length: " + triangles.Length);
+                
+    }
 
-        /*
-        
-        Debug.Log("countX test: " + ReadGridFromFile.countX);
-        Debug.Log("countY test: " + ReadGridFromFile.countY);
-        Debug.Log("countX test: " + gridSizeX);
-        Debug.Log("countX test: " + gridSizeX.GetType());
+    private void Update()
+    {
+        //If settings changed then recreate map
+        if (OnChange())
+        {
+            CreateGradients(coloredGradient);
+            CreateMap();
+
+            currentColorMode = coloredGradient;
+
+            Debug.Log("Changed");
+        }
+
+        if (ColorizeHeightMap())
+            CreateMap();
+
+
+        /* //Try it later
+        CreateMap();
+        UpdateMesh();
         */
     }
 
@@ -108,6 +159,49 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
 
         Debug.Log("CountX in GetCountXY: " + gridSizeX + "\nCountY: " + gridSizeY);
         Debug.Log("CountZ in GetCountXY: " + zValues);
+    }
+
+    protected void SmoothHeightMap()
+    {       
+        //var heights = new float[gridSizeXactual * gridSizeYactual];
+        float[] heights = zValues;
+
+        
+
+        var gaussianKernel5 = new float[,]
+        {
+            {1,4,6,4,1},
+            {4,16,24,16,4},
+            {6,24,36,24,6},
+            {4,16,24,16,4},
+            {1,4,6,4,1}
+        };
+
+        float gaussScale = 1.0f / 256.0f;
+
+        for (int z = 0; z < gridSizeYactual; z++)
+        {
+            for (int x = 0; x < gridSizeXactual; x++)
+            {
+                float sum = 0;
+
+                for (int i = 0; i < 5; i++)
+                {
+                    for (int j = 0; j < 5; j++)
+                    {
+                        int xi = x - 2 + i;
+                        int zi = z - 2 + j;
+
+                        sum += GetNormalizedHeight(xi, zi) * gaussianKernel5[i, j] * gaussScale;
+                    }
+                }
+
+                heights[x + z * gridSizeXactual] = sum;
+            }
+        }
+
+        zValues = heights;
+        MakeGrid();        
     }
 
     void MakeGrid()
@@ -135,6 +229,12 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
             {
                 vertices[v] = new Vector3(x * cellsize, gridMultiplier * zValues[v], z * cellsize);     //in previous version used "(x * cellsize) - vertexOffset"
                 uvs[v] = new Vector2(vertices[v].x / (float)gridSizeX / cellsize, vertices[v].z / (float)gridSizeY / cellsize);
+
+                if(zValues[v] > maxTerrainHeight)
+                    maxTerrainHeight = zValues[v];
+                if (zValues[v] < minTerrainHeight)
+                    minTerrainHeight = zValues[v];
+
                 v++;
             }
         }
@@ -167,6 +267,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     }
 
 
+    
     void UpdateMesh()
     {
         mesh.Clear();
@@ -174,12 +275,23 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
                                                                                 //Default index format is 16 bit, since that takes less memory and bandwidth.
         mesh.vertices = vertices;
         mesh.triangles = triangles;
-        mesh.uv = uvs;
+        mesh.uv = uvs; 
         mesh.RecalculateNormals();
+    }
+    
+
+    protected virtual bool OnChange()                           // Default mode is nothing changes.
+    {
+        return false;
+    }
+
+    protected virtual bool ColorizeHeightMap()
+    {
+        return false;
     }
 
     protected abstract void CreateMap();                        // Create the map. Update to derivered class to implement.
-
+    
 
     float GetNormalizedHeight(int x, int z)
     {
@@ -197,7 +309,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         Debug.Log("==============================");
         */
 
-        return vertices[x + z * (gridSizeX + 1)].y;       //Take y-cordinate value (i.e. height) at point(x,0,z)
+        return vertices[x + z * gridSizeXactual].y;       //Take y-cordinate value (i.e. height) at point(x,0,z)
     }
 
     float GetHeight(int x, int z)
@@ -218,23 +330,11 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         float y8 = GetHeight(x + 0, z - 1);
         float y9 = GetHeight(x + 1, z - 1);
 
-        /*
-        Debug.Log("------------------------------");
-        Debug.Log(y1);
-        Debug.Log(y2);
-        Debug.Log(y3);
-        Debug.Log(y4);
-        Debug.Log(y6);
-        Debug.Log(y7);
-        Debug.Log(y8);
-        Debug.Log(y9);
-        Debug.Log("------------------------------");
-        */
-
         // Find derivatives p (dy/dx), q (dy/dz) using Evans-Young method
         float yx = (y3 + y6 + y9 - y1 - y4 - y7) / (6.0f * w);
         float yz = (y1 + y2 + y3 - y7 - y8 - y9) / (6.0f * w);
-
+        
+       
         /*
         Debug.Log("______________________________");
         Debug.Log(yx);
@@ -244,47 +344,182 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         return new Vector2(-yx, -yz);
     }
 
-
-    public void CreateNormalMap()
+    //Get the heigts maps first and second derivative using Evans-Young method.
+    protected void GetDerivatives(int x, int z, out Vector2 d1, out Vector3 d2)
     {
-        Texture2D normalMap = new Texture2D(gridSizeX, gridSizeY);
+        float w = cellsize;
+        float w2 = w * w;
+        float y1 = GetHeight(x - 1, z + 1);
+        float y2 = GetHeight(x + 0, z + 1);
+        float y3 = GetHeight(x + 1, z + 1);
+        float y4 = GetHeight(x - 1, z + 0);
+        float y5 = GetHeight(x + 0, z + 0);
+        float y6 = GetHeight(x + 1, z + 0);
+        float y7 = GetHeight(x - 1, z - 1);
+        float y8 = GetHeight(x + 0, z - 1);
+        float y9 = GetHeight(x + 1, z - 1);
 
-        for (int z = 0; z < gridSizeY; z++)
+        // Find derivatives p (dy/dx), q (dy/dz) using Evans-Young method
+        float yx = (y3 + y6 + y9 - y1 - y4 - y7) / (6.0f * w);
+        float yz = (y1 + y2 + y3 - y7 - y8 - y9) / (6.0f * w);
+
+        // Find second order derivatives r (d*dy/dx*x), t (d*dy/dz*z), s (d*dy/dx*dz)
+        float yxx = (y1 + y3 + y4 + y6 + y7 + y9 - 2.0f * (y2 + y5 + y8)) / (3.0f * w2);
+        float yzz = (y1 + y2 + y3 + y7 + y8 + y9 - 2.0f * (y4 + y5 + y6)) / (3.0f * w2);
+        float yxz = (y3 + y7 - y1 - y9) / (4.0f * w2);
+
+        d1 = new Vector2(-yx, -yz);
+        d2 = new Vector3(-yxx, -yzz, -yxz);     //is zxy or -zxy?
+    }
+
+
+    // Take a parameter, rescale it and return as a 
+    // color using a gradient. Helps visualize some 
+    // parameters better especially if they have a 
+    // wide dynamic range and can be negative. 
+    protected Color Colorize(float v, float exponent, bool nonNegative)
+    {
+        if(exponent > 0)
         {
-            for (int x = 0; x < gridSizeX; x++)
-            {
+            float sign = FMath.SignOrZero(v);
+            float pow = Mathf.Pow(10, exponent);
+            float log = Mathf.Log(1.0f + pow * Mathf.Abs(v));
 
-                //Debug.Log("X: " + x + "  Z: " + z);
-                // Debug.Log("~~~~~~~~~~~~~~~~~~~");
-
-
-                Vector2 d1 = GetFirstDerivative(x, z);
-
-                //Not to sure of the orientation.
-                //Might need to flip x or y
-
-                var n = new Vector3();
-
-                /*
-                n.x = d1.x * 0.5f + 0.5f;
-                n.y = 1f;
-                n.z = -d1.y * 0.5f + 0.5f;               
-                */
-
-                n.x = d1.x * 0.5f + 0.5f;
-                n.y = -d1.y * 0.5f + 0.5f;
-                n.z = 1.0f;
-
-
-                n.Normalize();
-
-                //Debug.Log(n);
-
-                normalMap.SetPixel(x, z, new Color(n.x, n.y, n.z, 1f));
-            }
+            v = sign * log;
         }
 
-        normalMap.Apply();
-        material.mainTexture = normalMap;
+        if (nonNegative)
+            return gradient.GetPixelBilinear(v, 0);
+        else
+        {
+            if (v > 0)
+                return posGradient.GetPixelBilinear(v, 0);
+            else
+                return negGradient.GetPixelBilinear(-v, 0);
+        }
+    }
+
+    private void CreateGradients(bool colored)
+    {
+        if (colored)
+        {
+            gradient = CreateGradient(VISUALIZE_GRADIENT.COOL_WARM);
+            posGradient = CreateGradient(VISUALIZE_GRADIENT.WARM);
+            negGradient = CreateGradient(VISUALIZE_GRADIENT.COOL);
+        }
+        else
+        {
+            gradient = CreateGradient(VISUALIZE_GRADIENT.BLACK_WHITE);
+            posGradient = CreateGradient(VISUALIZE_GRADIENT.GREY_WHITE);
+            negGradient = CreateGradient(VISUALIZE_GRADIENT.GREY_BLACK);
+        }
+
+        gradient.Apply();
+        posGradient.Apply();
+        negGradient.Apply();
+    }
+
+    private Texture2D CreateGradient(VISUALIZE_GRADIENT g)
+    {
+        switch (g)
+        {
+            case VISUALIZE_GRADIENT.WARM:
+                return CreateWarmGradient();
+
+            case VISUALIZE_GRADIENT.COOL:
+                return CreateCoolGradient();
+
+            case VISUALIZE_GRADIENT.COOL_WARM:
+                return CreateCoolToWarmGradient();
+
+            case VISUALIZE_GRADIENT.GREY_WHITE:
+                return CreateGreyToWhiteGradient();
+
+            case VISUALIZE_GRADIENT.GREY_BLACK:
+                return CreateGreyToBlackGradient();
+
+            case VISUALIZE_GRADIENT.BLACK_WHITE:
+                return CreateBlackToWhiteGradient();
+        }
+
+        return null;
+    }
+
+    private Texture2D CreateWarmGradient()
+    {
+        var gradient = new Texture2D(5, 1, TextureFormat.ARGB32, false, true);
+        gradient.SetPixel(0, 0, new Color32(80, 230, 80, 255));
+        gradient.SetPixel(1, 0, new Color32(180, 230, 80, 255));
+        gradient.SetPixel(2, 0, new Color32(230, 230, 80, 255));
+        gradient.SetPixel(3, 0, new Color32(230, 180, 80, 255));
+        gradient.SetPixel(4, 0, new Color32(230, 80, 80, 255));
+        gradient.wrapMode = TextureWrapMode.Clamp;
+
+        return gradient;
+    }
+
+    private Texture2D CreateCoolGradient()
+    {
+        var gradient = new Texture2D(5, 1, TextureFormat.ARGB32, false, true);
+        gradient.SetPixel(0, 0, new Color32(80, 230, 80, 255));
+        gradient.SetPixel(1, 0, new Color32(80, 230, 180, 255));
+        gradient.SetPixel(2, 0, new Color32(80, 230, 230, 255));
+        gradient.SetPixel(3, 0, new Color32(80, 180, 230, 255));
+        gradient.SetPixel(4, 0, new Color32(80, 80, 230, 255));
+        gradient.wrapMode = TextureWrapMode.Clamp;
+
+        return gradient;
+    }
+
+    private Texture2D CreateCoolToWarmGradient()
+    {
+        var gradient = new Texture2D(9, 1, TextureFormat.ARGB32, false, true);
+        gradient.SetPixel(0, 0, new Color32(80, 80, 230, 255));
+        gradient.SetPixel(1, 0, new Color32(80, 180, 230, 255));
+        gradient.SetPixel(2, 0, new Color32(80, 230, 230, 255));
+        gradient.SetPixel(3, 0, new Color32(80, 230, 180, 255));
+        gradient.SetPixel(4, 0, new Color32(80, 230, 80, 255));
+        gradient.SetPixel(5, 0, new Color32(180, 230, 80, 255));
+        gradient.SetPixel(6, 0, new Color32(230, 230, 80, 255));
+        gradient.SetPixel(7, 0, new Color32(230, 180, 80, 255));
+        gradient.SetPixel(8, 0, new Color32(230, 80, 80, 255));
+        gradient.wrapMode = TextureWrapMode.Clamp;
+
+        return gradient;
+    }
+
+    private Texture2D CreateGreyToWhiteGradient()
+    {
+        var gradient = new Texture2D(3, 1, TextureFormat.ARGB32, false, true);
+        gradient.SetPixel(0, 0, new Color32(128, 128, 128, 255));
+        gradient.SetPixel(1, 0, new Color32(192, 192, 192, 255));
+        gradient.SetPixel(2, 0, new Color32(255, 255, 255, 255));
+        gradient.wrapMode = TextureWrapMode.Clamp;
+
+        return gradient;
+    }
+
+    private Texture2D CreateGreyToBlackGradient()
+    {
+        var gradient = new Texture2D(3, 1, TextureFormat.ARGB32, false, true);
+        gradient.SetPixel(0, 0, new Color32(128, 128, 128, 255));
+        gradient.SetPixel(1, 0, new Color32(64, 64, 64, 255));
+        gradient.SetPixel(2, 0, new Color32(0, 0, 0, 255));
+        gradient.wrapMode = TextureWrapMode.Clamp;
+
+        return gradient;
+    }
+
+    private Texture2D CreateBlackToWhiteGradient()
+    {
+        var gradient = new Texture2D(5, 1, TextureFormat.ARGB32, false, true);
+        gradient.SetPixel(0, 0, new Color32(0, 0, 0, 255));
+        gradient.SetPixel(1, 0, new Color32(64, 64, 64, 255));
+        gradient.SetPixel(2, 0, new Color32(128, 128, 128, 255));
+        gradient.SetPixel(3, 0, new Color32(192, 192, 192, 255));
+        gradient.SetPixel(4, 0, new Color32(255, 255, 255, 255));
+        gradient.wrapMode = TextureWrapMode.Clamp;
+
+        return gradient;
     }
 }
