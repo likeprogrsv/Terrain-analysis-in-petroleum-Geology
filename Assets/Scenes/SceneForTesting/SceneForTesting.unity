@@ -96,6 +96,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -186,7 +187,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
+  - {fileID: 2100000, guid: 49988a7743d023f47bc0c811e5a26a8a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -227,11 +228,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55d41b078795dd1458345ad4ae1ac589, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NormalMap: 0
+  FillDepressions: 0
   m_material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
   drawSphere: 0
-  xSize: 40
-  zSize: 40
+  xSize: 3
+  zSize: 3
   m_cellLength: 1
+  nodata: 0
 --- !u!1 &899988617
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,8 +374,9 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1967793848}
   m_Enabled: 1
-  serializedVersion: 9
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10

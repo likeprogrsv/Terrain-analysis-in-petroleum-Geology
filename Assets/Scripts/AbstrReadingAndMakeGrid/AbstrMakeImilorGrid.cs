@@ -18,7 +18,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     protected int[] triangles;
     Vector2[] uvs;
 
-    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\OG_A_(10+15)_subtruct_OG_T(10+15)100m.is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
+    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\OG_A-OG_T3_smooth_10.is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
 
     public bool smoothTerrain;
     public int numberOfSmoothingIterations = 2;
@@ -136,14 +136,9 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
             Debug.Log("Changed");
         }
 
-        if (ColorizeHeightMap())
-            CreateMap();
-
-
-        /* //Try it later
-        CreateMap();
-        UpdateMesh();
-        */
+        //if (ColorizeHeightMap())                      // Real time updating gradient colors
+         //   CreateMap();
+                  
     }
 
 

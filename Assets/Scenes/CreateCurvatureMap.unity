@@ -158,7 +158,7 @@ MonoBehaviour:
   coloredGradient: 1
   cellsize: 5
   GridMultiplier: 0
-  curvatureType: 1
+  curvatureType: 0
 --- !u!4 &24888432
 Transform:
   m_ObjectHideFlags: 0

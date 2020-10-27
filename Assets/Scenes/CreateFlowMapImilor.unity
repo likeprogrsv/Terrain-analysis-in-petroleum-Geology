@@ -159,11 +159,6 @@ MonoBehaviour:
   material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
   coloredGradient: 0
   cellsize: 5
-  gridSizeX: 0
-  gridSizeY: 0
-  gridSizeXactual: 0
-  gridSizeYactual: 0
-  zValues: []
   GridMultiplier: 0
   amount: 0.000001
   iterationsNumber: 5

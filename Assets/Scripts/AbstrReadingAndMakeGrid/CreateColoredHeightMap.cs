@@ -10,7 +10,7 @@ public class CreateColoredHeightMap : AbstrMakeImilorGrid
 
     protected override bool ColorizeHeightMap()
     {
-        return true;
+        return true;           //True
     }     
 
     // Create color gradient for colored heightmap
