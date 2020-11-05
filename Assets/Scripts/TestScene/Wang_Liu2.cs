@@ -5,33 +5,28 @@ using UnityEngine;
 public class Wang_Liu2
 {   
 	
-    public Wang_Liu2(float[,] Z, float[,] Z_flat, int[,] depr, int[] outlets_list, int q_out, float Zmax, int Nx, int Ny, float NODATA)
+    public Wang_Liu2(float[,] Z, ref float[,] Z_flat, ref int[,] depr, ref int[] outlets_list, ref int q_out, float Zmax, int Nx, int Ny, float NODATA)
     {
         //Начало работы
         priorityQueue = new PriorityQueue();
         this.NODATA = NODATA;
         this.Z = Z;
+        //this.Z_flat = Z_flat;
 
-        SetVariableValues(Z, Z_flat, Nx, Ny, outlets_list, q_out);
-        SearchLocalDepr();
-
-
+        SetVariableValues(Z, ref Z_flat, ref depr, Nx, Ny);
+        SearchLocalDepr(ref Z_flat, ref depr, Nx, Ny, ref outlets_list, ref q_out);
     }
 	
 	//Переменные, передаваемые в программу
-    float[,] Z;             //Исходная модель
-    float[,] Z_flat;        //Модель для заполнения "под плоскость"
+    float[,] Z;             //Исходная модель    
     int[,] depr;            //Идентификатор плоскостей на модели. 1 - плоскость, 0 - не плоскость.
-    int[] out_list;         //Список точек выхода (одномерный, сортировка по возрастанию высоты)
-    int q_out;              //Итератор для списка точек выхода
     float NODATA;           //Значение «нет данных»
 
-    /*
-    float[,] Zout;          //Результат заполнения
-    int Nx, Ny;             //Размерность матрицы
-    float Zmin, Zmax, stepX, stepY;     //Минимальное и максимальное значение высоты на исходной модели, Шаг сетки
-    
-	*/
+    //float[,] Z_flat;        //Модель для заполнения "под плоскость"
+    //int q_out;              //Итератор для списка точек выхода
+    //int[] out_list;         //Список точек выхода (одномерный, сортировка по возрастанию высоты)
+
+
     PriorityQueue priorityQueue;
     Queue q = new Queue();      //Очередь с приоритетом
 	Node x = new Node();        //Элементарный узел очереди с приоритетом
@@ -41,9 +36,10 @@ public class Wang_Liu2
 
 	int q2, q_max;				//Общее количество точек для обработки.
 								//В начале работы программы равно количеству ячеек в матрице, затем снижается (за счёт значений "нет данных")
-
+    
 	float Z1, Z2;
     int percent_complete, percent_0;
+    int c1, c2, r1, r2;
 
     //Скользящее окно 3х3(сначала просмотр прямых соседей, потом соседей по диагонали)
     //int k;
@@ -52,14 +48,14 @@ public class Wang_Liu2
 
 
     //Начало работы	
-    protected void SetVariableValues(float[,] Z, float[,] Z_fl, int Nx, int Ny, int[] out_l, int qOut)
+    protected void SetVariableValues(float[,] Z, ref float[,] Z_flat, ref int[,] depr, int Nx, int Ny)
 	{
 		q_max = Nx * Ny;
 		Z_flat = Z;							//Модель для заполнения "под плоскость"
 		depr = SetZeros2dIntArr(Nx, Ny);	//Матрица меток понижений (границ, точек выхода)	
 		mask = SetZeros2dIntArr(Nx, Ny);    //Метки процессинга
-        out_list = out_l;
-        q_out = qOut;
+        //out_list = out_l;
+        //q_out = qOut;
         //Определение первоначального списка точек
         q2 = 0;			
 		InitializeSet(Nx, Ny);
@@ -69,9 +65,9 @@ public class Wang_Liu2
 	protected int[,] SetZeros2dIntArr(int Nx, int Ny)
 	{
 		int[,] deprArr = new int[Nx, Ny];
-		for (int y = 0; y < Ny; y++)
+		for (int x = 0; x < Nx; x++)
 		{
-			for (int x = 0; x < Nx; x++)
+			for (int y = 0; y < Ny; y++)
 			{
 				deprArr[x, y] = 0;
 			}
@@ -148,16 +144,78 @@ public class Wang_Liu2
 
 
     //Поиск локальных понижений
-    protected void SearchLocalDepr()
+    protected void SearchLocalDepr(ref float[,] Z_flat, ref int[,] depr, int Nx, int Ny, ref int[] out_list, ref int q_out)
     {
         q_out = 0;
         percent_0 = 0;
 
         while(q.n > 0)
         {
-            x = priorityQueue.Top(q);               //Извлечение первого элемента из очереди
-            Debug.Log(x.priority);
-            q.n--;
+            x = priorityQueue.Top(ref q);               //Извлечение первого элемента из очереди
+            Z1 = x.priority;
+            c1 = x.c;
+            r1 = x.r;
+
+            //Просмотр соседей извлечённого элемента
+            for (int k = 0; k < kx.Length; k++)
+            {
+                c2 = c1 + kx[k]; r2 = r1 + ky[k];
+                if (c2 < 1 || c2 >= Nx || r2 < 1 || r2 >= Ny) continue;
+                if (Z[c2, r2] == NODATA) continue;
+
+                //Проверка границы
+                if(Z_flat[c2, r2] >= Z_flat[c1, r1] && depr[c1, r1] == 1 && depr[c2, r2] == 0)
+                {
+                    depr[c2, r2] = -1;
+                    Debug.Log("Граница в ячейке Z[" + c2 + " " + r2 + "]");
+                }
+
+                //Проверка дополнительных точек выхода
+                if (mask[c2, r2] == 1 && depr[c1, r1] == 1 && depr[c2, r2] == -1 && Z_flat[c2, r2] == Z_flat[c1, r1])
+                {
+                    depr[c2, r2] = -2;
+                    Debug.Log("Точка выхода в ячейке Z[" + c2 + " " + r2 + "]");
+                    q_out = q_out + 1;
+                    out_list[q_out] = c1 * Ny + r1;         //"(c1 - 1) * Ny + r1" - в оригинале было так. Я же сделал
+                                                            //поправку на то что в с# индексация начинается с нуля
+                }
+
+                //Пропускаются соседи, которые уже «засветились» в очереди
+                if (mask[c2, r2] != 0) continue;
+
+                //Добавление в очередь
+                q2 = q2 + 1;
+                priorityQueue.Enqueue(ref q, Z[c2, r2], q2, c2, r2);
+                mask[c2, r2] = 1;       //Устанавливаем маску
+
+                //Проверка понижения
+                if (Z_flat[c2, r2] <= Z_flat[c1, r1])
+                {
+                    Z_flat[c2, r2] = Z_flat[c1, r1];
+                    depr[c2, r2] = 1;
+
+                    //Если точка, из которой мы пришли, не является понижением, маркируем её как точку выхода
+                    if(depr[c1, r1] != 1)
+                    {
+                        depr[c1, r1] = -2;
+                        q_out = q_out + 1;
+                        out_list[q_out] = c1 * Ny + r1;         //"(c1 - 1) * Ny + r1" - в оригинале было так. Я же сделал
+                                                                //поправку на то что в с# индексация начинается с нуля
+                    }
+
+                }
+            }
+
+            mask[c1, r1] = 2;
+
+            //Отображение процента выполнения
+            percent_complete = 100 * q2 / q_max;
+            if(percent_complete > percent_0)
+            {
+                Debug.Log("Searching for pits: " + percent_complete + "% DEM scanned");
+                percent_0 = percent_complete;
+            }
         }
+        if (mask != null) mask = null;
     }
 }

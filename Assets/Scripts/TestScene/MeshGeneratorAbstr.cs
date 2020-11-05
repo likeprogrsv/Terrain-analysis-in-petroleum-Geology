@@ -64,7 +64,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
 
         if (FillDepressions)
         {
-            Filling filling = new Filling(Z, Zout, Nx, Ny, Zmin, Zmax, StepX, StepY, nodata);
+            Filling filling = new Filling(Z, ref Zout, Nx, Ny, Zmin, Zmax, StepX, StepY, nodata);
         }
 
         
@@ -83,7 +83,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
     {
         vertices = new Vector3[(xSize + 1) * (zSize + 1)];
         uvs = new Vector2[vertices.Length];
-        Z = new float[xSize + 1, zSize + 1];
+        Z = new float[zSize + 1, xSize + 1];
 
         for (int i = 0, z = 0; z <= zSize; z++)
         {
@@ -92,7 +92,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
                 float y = Mathf.PerlinNoise(x * .3f, z * .3f) * 2f;
                 vertices[i] = new Vector3(x * m_cellLength, y, z * m_cellLength);
                 uvs[i] = new Vector2(vertices[i].x / (float)xSize, vertices[i].z / (float)zSize);
-                Z[x, z] = y;
+                Z[z, x] = y;
 
                 if (vertices[i].y > Zmax)
                     Zmax = vertices[i].y;

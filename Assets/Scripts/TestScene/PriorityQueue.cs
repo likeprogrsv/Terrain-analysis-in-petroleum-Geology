@@ -39,11 +39,13 @@ public class PriorityQueue
 
         while(parent * 2 <= queue.n)
         {
-            
-            child = (parent * 2) - 1;
-            parent--;
+            if (parent != 0)
+            {
+                child = (parent * 2) - 1;
+                parent--;
+            } 
             //Ïîïðîáîâàòü èñïîëüçîâàòü óñëîâèå È ÏÎÌÅÍßÒÜ ÈÍÄÅÊÑÛ Â ÎÑÒÀËÜÍÛÕ ÌÅÑÒÀÕ
-            if (child == 0) child = 1;
+            else child = 1;
 
             if(child + 1 < queue.n)                     //áûëî   if(child + 1 <= queue.n)
             {
@@ -186,12 +188,12 @@ public class PriorityQueue
     */
 
 
-    public Node Top(Queue q)
+    public Node Top(ref Queue q)
     {
         Queue queue = q;
         Node result = new Node();
         result = q.buf[0];
-        q.buf[0] = q.buf[q.n];
+        q.buf[0] = q.buf[q.n - 1];
         q.n = q.n - 1;
         SiftDown(q, 0);        
         return result;
