@@ -167,7 +167,7 @@ public class Wang_Liu2
                 if(Z_flat[c2, r2] >= Z_flat[c1, r1] && depr[c1, r1] == 1 && depr[c2, r2] == 0)
                 {
                     depr[c2, r2] = -1;
-                    Debug.Log("Граница в ячейке Z[" + c2 + " " + r2 + "]");
+                    //Debug.Log("Граница в ячейке Z[" + c2 + " " + r2 + "]");
                 }
 
                 //Проверка дополнительных точек выхода

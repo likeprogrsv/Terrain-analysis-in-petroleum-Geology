@@ -58,9 +58,9 @@ public class Filling //: MeshGeneratorAbstr
             if (outlets_list[q] == 0) break;                //Выходим, когда добрались до пустой части списка
             One_to_Two(ref c1, ref r1, outlets_list[q]);    //Получаем индексы очередной точки выхода
             if (depr[c1, r1] != -2) continue;               //Прокручиваем точку выхода, если она уже не точка выхода
-            Filling_ASTAR filling_ASTAR = new Filling_ASTAR(Z, depr, c1, r1, Z[c1, r1], ref Zout_temp, Nx, Ny, Zmax, StepX, StepY, NODATA);
-            numberOfPits++;
+            Filling_ASTAR filling_ASTAR = new Filling_ASTAR(Z, depr, c1, r1, Z[c1, r1], ref Zout_temp, Nx, Ny, Zmax, StepX, StepY, NODATA);            
             Debug.Log("fill pits : " + numberOfPits);
+            numberOfPits++;
         }
     }
 
@@ -87,9 +87,9 @@ public class Filling //: MeshGeneratorAbstr
 
     protected void PreparingFinalMatrix(ref float[,] Zout)              //Подготовка результирующей матрицы (высоты ячеек понижений заменяются на значение «нет данных»
     {
-        for (int i = 0; i < Ny; i++)
+        for (int i = 0; i < Nx; i++)
         {
-            for (int j = 0; j < Nx; j++)
+            for (int j = 0; j < Ny; j++)
             {
                 if (depr[i, j] == 0)                // ИСПРАВИТЬ depr???????
                 {

@@ -88,9 +88,9 @@ public class Filling_ASTAR
         connect_depressions = true;
 
         //Заполняем выходной массив
-        for (int i = 0; i < Ny; i++)
+        for (int i = 0; i < Nx; i++)
         {
-            for (int j = 0; j < Nx; j++)
+            for (int j = 0; j < Ny; j++)
             {
                 if (depr[i, j] > 0)
                 {
@@ -286,9 +286,9 @@ public class Filling_ASTAR
     protected float[,] SetNODATA2dFloatArr()
     {
         float[,] outArr = new float[Nx, Ny];
-        for (int i = 0; i < Ny; i++)
+        for (int i = 0; i < Nx; i++)
         {
-            for (int j = 0; j < Nx; j++)
+            for (int j = 0; j < Ny; j++)
             {
                 outArr[i, j] = nodata;
             }
@@ -299,9 +299,9 @@ public class Filling_ASTAR
     protected int[,] SetZeros2dIntArr()
     {
         int[,] outArr = new int[Nx, Ny];
-        for (int x = 0; x < Ny; x++)
+        for (int x = 0; x < Nx; x++)
         {
-            for (int y = 0; y < Nx; y++)
+            for (int y = 0; y < Ny; y++)
             {
                 outArr[x, y] = 0;
             }

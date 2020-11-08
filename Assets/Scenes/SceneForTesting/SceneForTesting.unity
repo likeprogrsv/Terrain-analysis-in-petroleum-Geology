@@ -228,12 +228,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55d41b078795dd1458345ad4ae1ac589, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NormalMap: 0
+  NormalMap: 1
   FillDepressions: 1
   m_material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
   drawSphere: 0
-  xSize: 40
-  zSize: 40
+  xSize: 10
+  zSize: 15
   m_cellLength: 1
   nodata: 0
 --- !u!1 &899988617
