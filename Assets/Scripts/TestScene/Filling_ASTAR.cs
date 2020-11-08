@@ -33,6 +33,7 @@ public class Filling_ASTAR
         SetVariables(ref output_model, Nx, Ny);
         //Процедура поиска кратчайших путей по алгоритму AT
         SearchingShortPath(ref output_model);
+        HeightsExtrapolation(ref output_model);
     }
 
     //Переменные, работающие в программе
@@ -59,8 +60,8 @@ public class Filling_ASTAR
     //int i1, j1;
 
     //Переменные для работы с алгоритмом A*
-    Queue queue_points, queue_borders;
-    Node x;
+    //Queue queue_points, queue_borders;    ---> не использовалось в оригинале, зачем тогда здесь? забыли удалить??
+    //Node x;                               ---> не использовалось в оригинале, зачем тогда здесь? забыли удалить??
 
     float Z0, Z1, Z2, Z3, Z_temp;       //Высота точки истечения, временная новая высота заполняемой точки
 
@@ -76,9 +77,9 @@ public class Filling_ASTAR
 
     protected void SetVariables(ref float[,] output_model, int Nx, int Ny)
     {
-        queue_points = new Queue();
-        queue_borders = new Queue();
-        x = new Node();
+        //queue_points = new Queue();       ---> не использовалось в оригинале, зачем тогда здесь? забыли удалить??
+        //queue_borders = new Queue();      ---> не использовалось в оригинале, зачем тогда здесь? забыли удалить??
+        //x = new Node();                   ---> не использовалось в оригинале, зачем тогда здесь? забыли удалить??
         waylength = new float[Nx, Ny];       
         way_prev = new int[Nx, Ny];
         flag_status = new int[Nx, Ny];
@@ -205,6 +206,90 @@ public class Filling_ASTAR
             }
             q2 = q2 + 1;
         }
+    }
+
+
+    protected void HeightsExtrapolation(ref float[,] output_model)
+    {
+        //Ищем высоты для интерполяции(Z0 и Z1)
+                //Пытаемся уменьшить высоту точки выхода
+                //call decreasing_outlet()          ---> в оригинале эта функция не вызывается
+        Z0 = output_model[c_out, r_out];
+                //Пытаемся «приподнять» граничные ячейки.
+                ////call increasing_border(Z1)      ---> в оригинале эта функция не вызывается
+
+                //К настоящему моменту имеем: предварительно «приподнятую» временную модель; грид расстояний, грид "соединений"(каждая ячейка с предыдущей)
+                //Имееем также «верхнюю» (Z1)и «нижнюю» (Z0)высоты интерполяции
+
+        //Теперь пойдём в обратном направлении(от границ к выходу).Просматривать будем все ячейки границ(flag_status == 2) подряд
+        c1 = 0; r1 = 0; c2 = 0; r2 = 0;
+        q2 = 0;
+
+        for (int i = 0; i < q3; i++)
+        {
+            One_to_Two(ref c1, ref r1, list_borders[i]);
+
+            if (flag_status[c1, r1] != 2) continue;     //Если точка не относится к границе, прокручиваем её
+            //Пришли в точку, из которой надо восстанавливать линию.
+            dZ = input_model[c1, r1] - Z0;
+            //dZ = Z1 - Z0  --> закоментировано в оригинале
+            length = waylength[c1, r1];
+            while (true)
+            {
+                s = way_prev[c1, r1];
+                One_to_Two(ref c2, ref r2, s);
+                if (c2 == c_out && r2 == r_out) break;      //Выходим, если последующая точка является точкой выхода
+                Z_temp = Z0 + (dZ / length) * waylength[c2, r2];
+                if (output_model[c2, r2] == nodata || output_model[c2, r2] > Z_temp) output_model[c2, r2] = Z_temp;
+                flag_status[c2, r2] = 1;
+                c1 = c2; r1 = r2;
+            }
+        }
+
+        flag_status[c_out, r_out] = 1;
+
+        //Заполнение точек, через которые не проходит кратчайший путь
+        //Заполнение производится путём экстраполяции. Используются: высота точки выхода (Z0) и высота ближайшей_уже_обработанной точки (Z2)
+        for (int i = 0; i < q1; i++)
+        {
+            One_to_Two(ref c3, ref r3, list_cells[i]);
+            if (flag_status[c3, r3] != 3) continue;
+            dist1 = waylength[c3, r3];          //Полный путь от обрабатываемой ячейки до выхода
+            c1 = c3; r1 = r3;
+            //Теперь ищем ближайшего уже обработанного соседа вниз по течению   
+            while (true)
+            {
+                s = way_prev[c1, r1];
+                One_to_Two(ref c2, ref r2, s);
+                if (flag_status[c2, r2] == -1)      //Если, двигаясь обратно, мы дошли до ячейки-выхода, то...
+                {
+                    Z2 = output_model[c2, r2] + 0.1f;
+                    dist2 = dist1;
+                }
+                else if (flag_status[c2, r2] == 1)  //Если, двигаясь обратно, мы дошли до точки с уже известной высотой, то...
+                {
+                    Z2 = output_model[c2, r2];      //Устанавливаем новое значение «базовой» высоты (равное высоте заполненной ранее точки)
+                    dist2 = waylength[c2, r2];      //И запоминаем расстояние от незаполненной точки до выхода
+                    break;                          //И выходим из цикла
+                }
+                else
+                {
+                    c1 = c2; r1 = r2;               //Если нет, то смотрим дальше
+                }
+            }
+
+            Z3 = Z0 + ((Z2 - Z0) / dist2) * dist1;
+            output_model[c3, r3] = Z3;
+        }
+
+        //Собственно, всё. Матрица output_model передаётся обратно в главную программу
+
+        if (waylength != null) waylength = null;
+        if (flag_status != null) flag_status = null;
+        if (way_prev != null) way_prev = null;
+        if (list_cells != null) list_cells = null;
+        if (list_Z != null) list_Z = null;
+        if (list_borders != null) list_borders = null;
     }
 
 

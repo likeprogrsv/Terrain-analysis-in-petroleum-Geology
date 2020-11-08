@@ -65,6 +65,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
         if (FillDepressions)
         {
             Filling filling = new Filling(Z, ref Zout, Nx, Ny, Zmin, Zmax, StepX, StepY, nodata);
+            //RecreateShape();
         }
 
         
