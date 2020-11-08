@@ -6,11 +6,12 @@ public class Filling //: MeshGeneratorAbstr
 {
 
     //Переменные, передаваемые в программу
-    float[,] Z;             //Исходная модель
-    //float[,] Zout;          //Результат заполнения
-    int Nx, Ny;             //Размерность матрицы
-    //float Zmin, Zmax, stepX, stepY;     //Минимальное и максимальное значение высоты на исходной модели, Шаг сетки
-    float NODATA;           //Значение «нет данных»
+    float[,] Z;                 //Исходная модель
+    //float[,] Zout;            //Результат заполнения
+    int Nx, Ny;                 //Размерность матрицы
+    float Zmax, StepX, StepY;   //Минимальное и максимальное значение высоты на исходной модели, Шаг сетки
+    //float Zmin;     
+    float NODATA;                //Значение «нет данных»
 
 
     public Filling(float[,] Z, ref float[,] Zout, int Nx, int Ny, float Zmin, float Zmax, float StepX, float StepY, float NODATA)
@@ -18,6 +19,9 @@ public class Filling //: MeshGeneratorAbstr
         this.Z = Z;
         this.Nx = Nx;
         this.Ny = Ny;
+        this.Zmax = Zmax;
+        this.StepX = StepX;
+        this.StepY = StepY;
         this.NODATA = NODATA;
 
         SetArrays(Nx, Ny);
@@ -30,7 +34,7 @@ public class Filling //: MeshGeneratorAbstr
         //3. Подготовка результирующей матрицы (высоты ячеек понижений заменяются на значение «нет данных»
         PreparingFinalMatrix(ref Zout);
 
-        //4. Собственно, заполнение понижений. Последовательно, по одной паре «понижение — точка выхода»
+        //4. Собственно, заполнение понижений. Последовательно, по одной паре «понижение — точка выхода»        
         FillPits();
     }
 
@@ -42,6 +46,7 @@ public class Filling //: MeshGeneratorAbstr
     int numberOfOutlets = 0;
     int percent_0, percent_complete;
     int c1, r1;                 //Итераторы для циклов
+    int numberOfPits = 1;           //Сколько понижений заполнено
 
 
 
@@ -53,8 +58,9 @@ public class Filling //: MeshGeneratorAbstr
             if (outlets_list[q] == 0) break;                //Выходим, когда добрались до пустой части списка
             One_to_Two(ref c1, ref r1, outlets_list[q]);    //Получаем индексы очередной точки выхода
             if (depr[c1, r1] != -2) continue;               //Прокручиваем точку выхода, если она уже не точка выхода
-
-
+            Filling_ASTAR filling_ASTAR = new Filling_ASTAR(Z, depr, c1, r1, Z[c1, r1], ref Zout_temp, Nx, Ny, Zmax, StepX, StepY, NODATA);
+            numberOfPits++;
+            Debug.Log("fill pits : " + numberOfPits);
         }
     }
 

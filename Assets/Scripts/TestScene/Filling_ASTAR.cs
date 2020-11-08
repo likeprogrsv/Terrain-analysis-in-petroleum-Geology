@@ -29,7 +29,10 @@ public class Filling_ASTAR
         this.StepY = StepY;
         this.nodata = nodata;
 
+        //Подготовительный этап
         SetVariables(ref output_model, Nx, Ny);
+        //Процедура поиска кратчайших путей по алгоритму AT
+        SearchingShortPath(ref output_model);
     }
 
     //Переменные, работающие в программе
@@ -67,6 +70,8 @@ public class Filling_ASTAR
     //Скользящее окно 3х3(сначала просмотр прямых соседей, потом соседей по диагонали)
     int[] kx = { 1, 0, -1, 0, 1, -1, -1, 1 };
     int[] ky = { 0, 1, 0, -1, 1, 1, -1, -1 };
+
+    bool noCells = false;
 
 
     protected void SetVariables(ref float[,] output_model, int Nx, int Ny)
@@ -110,7 +115,7 @@ public class Filling_ASTAR
 
         //Ставим первую точку в очередь
         flag_status = SetZeros2dIntArr();
-        q1 = 1; q2 = 1; q3 = 0;
+        q1 = 0; q2 = 0; q3 = 0;                     //в оригинале было q1 = 1; q2 = 1; q3 = 0
         list_cells[0] = Two_to_One(c1, r1);
         list_Z[0] = input_model[c1, r1];
         flag_status[c1, r1] = -1;
@@ -123,6 +128,139 @@ public class Filling_ASTAR
     }
 
 
+    //Процедура поиска кратчайших путей по алгоритму AT
+    protected void SearchingShortPath(ref float[,] output_model)
+    {
+        while (noCells == false)
+        {
+            if (q2 > 0 && list_cells[q2] == 0)  //Завершаем поиск кратчайших путей, когда в очереди не остаётся ячеек
+            {                                   //То есть на очередном месте в списке-очереди — пустая запись    
+                noCells = true;                 
+                break;
+            }
+            One_to_Two(ref c1, ref r1, list_cells[q2]);     //Выбираем ячейку для просмотра на текущем шаге
+            if (depr[c1, r1] == 0 || depr[c1, r1] == -1) continue;      //Пропускаем ячейку из очереди, если она не относится к понижению
+
+            for (int k = 0; k < kx.Length; k++)     //Идём в гости к соседям
+            {
+                c2 = c1 + kx[k]; r2 = r1 + ky[k];
+                if (c2 < 1 || c2 >= Nx || r2 < 1 || r2 >= Ny) continue;
+                if (depr[c2, r2] == 0) continue;        //Если сосед не относится к понижению, прокручиваем его
+                if (flag_status[c2, r2] == 2 || flag_status[c2, r2] == 3) continue;     //Если сосед уже был обработан ранее, тоже прокручиваем его
+
+                //Вычисляем расстояние для соседа
+                waylength[c2, r2] = waylength[c1, r1] + Mathf.Sqrt(Mathf.Pow(((c2 - c1) * StepX), 2) + Mathf.Pow(((r2 - r1) * StepY), 2));
+                //Отмечаем путь возврата для соседа
+                way_prev[c2, r2] = Two_to_One(c1, r1);
+                //Отмечаем соседа как требующего обработки
+                flag_status[c2, r2] = 3;
+                //Добавляем новонайденного соседа в список
+                switch (depr[c2, r2])
+                {
+                    case -2:    //Сосед — точка выхода
+                //Обработка встреченных точек выхода будет зависеть от параметра connect_depressions
+                //Если TRUE, система понижений обрабатывается как единое целое
+                //Если FALSE, каждое понижение будет обрабатываться отдельно
+                        switch (connect_depressions)
+                        {
+                            case true:
+                                if (input_model[c2, r2] > Zo)
+                                {
+                                    output_model[c2, r2] = nodata;
+                                    depr[c2, r2] = 1;
+                                    flag_status[c2, r2] = 3;
+                                    AddCell_1(c2, r2, ref q1, q2);            ///////////////////////////////////////
+                                }
+                                break;
+                            case false:
+                                flag_status[c2, r2] = 2;
+                                if (Z1 > input_model[c2, r2] && input_model[c2, r2] > input_model[c_out, r_out])
+                                {
+                                    Z1 = input_model[c2, r2];
+                                    c3 = c2; r3 = r2;
+                                }
+                                break;
+                        }
+
+                        break;
+                    case -1:        //Сосед — граница
+                        //Вставить инструкцию записи в список
+                        flag_status[c2, r2] = 2;                        
+                        list_borders[q3] = Two_to_One(c2, r2);
+                        q3 = q3 + 1;                                    //Эта строка в оригинале была строкой выше
+                        //Инструкция поиска минимальной высоты среди граничных ячеек.По моему скромному мнению, она не нужна
+                        if (Z1 > input_model[c2, r2] && input_model[c2, r2] > input_model[c_out, r_out])
+                        {
+                            Z1 = input_model[c2, r2];
+                            c3 = c2; r3 = r2;
+                        }
+                        break;
+                    case 0:     //Сосед — просто сосед
+
+                    default:    //Сосед — просто сосед
+                        flag_status[c2, r2] = 3;
+                        AddCell_1(c2, r2, ref q1, q2);
+                        break;
+                }
+            }
+            q2 = q2 + 1;
+        }
+    }
+
+
+    protected void AddCell_1(int c, int r, ref int q1, int q2)
+    {
+        //c,r,q1,q2  Столбец и строка ячейки, добавляемой в список, а также номер текущего элемента в списке
+        int index;
+        int new_element;        //Индекс, под которым будет записан новый элемент. По умолчанию — в конец списка
+        int first, last;
+
+        index = Two_to_One(c, r);
+        q1 = q1 + 1;
+        new_element = q1;       //Собственно, вот оно, "по умолчанию"
+
+        if(q1 > 1)              //Последующие операции проводятся только тогда, когда в списке больше одного элемента
+        {                       //в оригинале было q > 1
+            if(input_model[c, r] < list_Z[q1 - 1])
+            {
+                //Если новый элемент меньше последнего, запускаем процедуру сдвига.
+                //Если новый элемент больше последнего, сразу ставим его в конец)
+                first = q2; last = q1;      //в оригинале было first = q2 + 1; last = q1 - 1;
+
+                //Ищем место элемента в списке. Сортировка кучей (точнее, её подобие)
+                if (last != first)
+                {
+                    while (last != first)
+                    {
+                        if (input_model[c, r] < list_Z[((last - first)/2) + first])
+                        {
+                            last = ((last - first) / 2) + first;
+                        }
+                        else
+                        {
+                            first = ((last - first) / 2) + first + 1;        //////////Возможно еденицу в конце стоит убрать (не прибавлять её) --->  добавлять нужно, иначе цикл будет бесконечным
+                        }
+                    }
+                }
+                new_element = first;
+                MoveCellsInQueue_1(new_element, q1);
+            }
+        }
+
+        //Записываем новый элемент в оба списка в ту позицию, которая была определена (q, она же new_element)
+        list_cells[new_element] = index;
+        list_Z[new_element] = input_model[c, r];
+    }
+
+
+    protected void MoveCellsInQueue_1(int first_cell, int last_cell)
+    {        
+        for (int i = last_cell; i > last_cell - (first_cell + 1); i--)       //в оригинале do number = last_cell, first_cell+1, -1
+        {
+            list_cells[i] = list_cells[i - 1];
+            list_Z[i] = list_Z[i - 1];
+        }
+    }
 
 
     protected int[] SetZeros1dIntArr()
@@ -174,5 +312,12 @@ public class Filling_ASTAR
     protected int Two_to_One(int c1, int r1)
     {
         return c1 * Ny + r1;
+    }
+
+    protected void One_to_Two(ref int column, ref int row, int indx)
+    {
+        row = indx % Ny;
+        column = indx / Ny;
+        //в оригинальном файле на fortran'е было немного по-другому, я переделал с учётом идекса [0]
     }
 }

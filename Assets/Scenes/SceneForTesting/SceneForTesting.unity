@@ -232,8 +232,8 @@ MonoBehaviour:
   FillDepressions: 1
   m_material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
   drawSphere: 0
-  xSize: 10
-  zSize: 10
+  xSize: 40
+  zSize: 40
   m_cellLength: 1
   nodata: 0
 --- !u!1 &899988617
