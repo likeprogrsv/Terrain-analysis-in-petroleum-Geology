@@ -13,7 +13,7 @@ public class Filling_ASTAR
     int c_out, r_out;           //Колонка и столбец ячейки выхода
     float Zo;                   //Высота ячейки-выхода
     float nodata;
-    bool connect_depressions;
+    public bool connect_depressions = true;
 
     public Filling_ASTAR(float[,] input_model, int[,] depr, int c_out, int r_out, float Zo, ref float[,] output_model, int Nx, int Ny, float Zmax, float StepX, float StepY, float nodata)
     {
@@ -88,12 +88,13 @@ public class Filling_ASTAR
         list_borders = new int[Nx * Ny];
         connect_depressions = true;
 
+        
         //Заполняем выходной массив
         for (int i = 0; i < Nx; i++)
         {
             for (int j = 0; j < Ny; j++)
             {
-                if (depr[i, j] > 0)
+                if (depr[i, j] > 0)         //в оригинале было " > 0"
                 {
                     output_model[i, j] = nodata;
                 }
@@ -103,6 +104,8 @@ public class Filling_ASTAR
                 }
             }
         }
+        
+
 
         //Записываем индексы ячейки-выхода в переменные, которые будут использованы в цикле
         c1 = c_out;
@@ -250,7 +253,7 @@ public class Filling_ASTAR
 
         //Заполнение точек, через которые не проходит кратчайший путь
         //Заполнение производится путём экстраполяции. Используются: высота точки выхода (Z0) и высота ближайшей_уже_обработанной точки (Z2)
-        for (int i = 0; i < q1; i++)
+        for (int i = 0; i <= q1; i++)
         {
             One_to_Two(ref c3, ref r3, list_cells[i]);
             if (flag_status[c3, r3] != 3) continue;
@@ -304,7 +307,7 @@ public class Filling_ASTAR
         q1 = q1 + 1;
         new_element = q1;       //Собственно, вот оно, "по умолчанию"
 
-        if(q1 > 1)              //Последующие операции проводятся только тогда, когда в списке больше одного элемента
+        if(q1 > 0)              //Последующие операции проводятся только тогда, когда в списке больше одного элемента
         {                       //в оригинале было q > 1
             if(input_model[c, r] < list_Z[q1 - 1])
             {
@@ -340,7 +343,7 @@ public class Filling_ASTAR
 
     protected void MoveCellsInQueue_1(int first_cell, int last_cell)
     {        
-        for (int i = last_cell; i > last_cell - (first_cell + 1); i--)       //в оригинале do number = last_cell, first_cell+1, -1
+        for (int i = last_cell; i > first_cell; i--)       //в оригинале do number = last_cell, first_cell+1, -1
         {
             list_cells[i] = list_cells[i - 1];
             list_Z[i] = list_Z[i - 1];

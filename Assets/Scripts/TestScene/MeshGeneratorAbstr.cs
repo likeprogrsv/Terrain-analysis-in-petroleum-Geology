@@ -43,7 +43,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
 
 
     public const int GRD_FMT = 0;
-    public const float GRD_NODATA = -9999f;
+    public const float GRD_NODATA = 9999f;
 
     //объявление переменной производного типа (GRD_Header - переменная, tGRDHeader - тип, объявленный выше)
     //strGRD_Header GRD_Header = new strGRD_Header();
@@ -61,11 +61,11 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
         CreateShape();
         SetVariables();
         Zout = CreateZout(Nx, Ny);
-
+            
         if (FillDepressions)
         {
             Filling filling = new Filling(Z, ref Zout, Nx, Ny, Zmin, Zmax, StepX, StepY, nodata);
-            //RecreateShape();
+            RecreateShape(Zout);
         }
 
         
@@ -129,6 +129,18 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
     }
 
 
+    protected void RecreateShape(float[,] Zout)
+    {
+        for (int i = 0, z = 0; z < Ny; z++)
+        {
+            for (int x = 0; x < Nx; x++)
+            {
+                vertices[i] = new Vector3(x * m_cellLength, Zout[x, z], z * m_cellLength);
+                i++;
+            }
+        }
+    }
+
     protected void SetVariables()
     {
         Nx = xSize + 1;
@@ -162,6 +174,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
     {
         mesh.Clear();
 
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
