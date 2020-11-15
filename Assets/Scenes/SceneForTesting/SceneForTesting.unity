@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 431308604}
   - component: {fileID: 431308602}
   - component: {fileID: 431308606}
+  - component: {fileID: 431308607}
   m_Layer: 0
   m_Name: MeshGenerator
   m_TagString: Untagged
@@ -187,7 +188,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2fb66559f0e048d478e1695c9bddbfcb, type: 2}
+  - {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -223,19 +224,41 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 431308601}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 55d41b078795dd1458345ad4ae1ac589, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NormalMap: 0
-  FillDepressions: 0
+  FillDepressions: 1
+  _CreateMap: 0
   m_material: {fileID: 2100000, guid: 2fb66559f0e048d478e1695c9bddbfcb, type: 2}
   drawSphere: 0
-  xSize: 40
-  zSize: 40
+  xSize: 10
+  zSize: 10
   m_cellLength: 1
   nodata: 0
+--- !u!114 &431308607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 431308601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e21c9475ce914148bf210c7b7c48f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FillDepressions: 1
+  _CreateMap: 1
+  m_material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
+  drawSphere: 0
+  xSize: 100
+  zSize: 100
+  m_cellLength: 1
+  nodata: 0
+  amount: 0.0001
+  iterationsNumber: 5
 --- !u!1 &899988617
 GameObject:
   m_ObjectHideFlags: 0

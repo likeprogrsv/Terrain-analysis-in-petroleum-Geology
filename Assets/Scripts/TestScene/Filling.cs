@@ -49,15 +49,14 @@ public class Filling //: MeshGeneratorAbstr
     int numberOfPits = 1;           //Сколько понижений заполнено
 
 
-
     protected void FillPits(ref float[,] Zout)
     {
         percent_0 = 0;
-        for(int q = 0; q < numberOfOutlets; q++)
+        for (int q = 0; q < numberOfOutlets; q++)
         {
             if (outlets_list[q] == 0) break;                //Выходим, когда добрались до пустой части списка
             One_to_Two(ref c1, ref r1, outlets_list[q]);    //Получаем индексы очередной точки выхода
-            if (depr[c1, r1] != -2) continue;               //Прокручиваем точку выхода, если она уже не точка выхода
+            if (depr[c1, r1] != -2) continue;               //Прокручиваем точку выхода, если она уже не точка выхода            
             Filling_ASTAR filling_ASTAR = new Filling_ASTAR(Z, depr, c1, r1, Z[c1, r1], ref Zout_temp, Nx, Ny, Zmax, StepX, StepY, NODATA);
             //Debug.Log("fill pits : " + numberOfPits);
             //numberOfPits++;

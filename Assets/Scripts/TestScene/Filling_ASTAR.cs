@@ -73,7 +73,8 @@ public class Filling_ASTAR
     int[] ky = { 0, 1, 0, -1, 1, 1, -1, -1 };
 
     bool noCells = false;
-
+    bool check;
+   
 
     protected void SetVariables(ref float[,] output_model, int Nx, int Ny)
     {
@@ -148,6 +149,14 @@ public class Filling_ASTAR
             for (int k = 0; k < kx.Length; k++)     //Идём в гости к соседям
             {
                 c2 = c1 + kx[k]; r2 = r1 + ky[k];
+
+                /*
+                if(c2 == 86 && r2 == 236)
+                {
+                    check = true;
+                }
+                */
+
                 if (c2 < 1 || c2 >= Nx || r2 < 1 || r2 >= Ny) continue;
                 if (depr[c2, r2] == 0) continue;        //Если сосед не относится к понижению, прокручиваем его
                 if (flag_status[c2, r2] == 2 || flag_status[c2, r2] == 3) continue;     //Если сосед уже был обработан ранее, тоже прокручиваем его

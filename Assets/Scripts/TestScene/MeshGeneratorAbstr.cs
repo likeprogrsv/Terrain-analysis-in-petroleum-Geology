@@ -20,12 +20,15 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
 {
     Mesh mesh;
 
+    //public Material materialTest;
+
     Vector3[] vertices;
     int[] triangles;
     Vector2[] uvs;
 
-    public bool NormalMap = false;
     public bool FillDepressions;
+    public bool _CreateMap = false;
+    
     public Material m_material;
 
     public bool drawSphere = false;
@@ -70,7 +73,7 @@ public abstract class MeshGeneratorAbstr : MonoBehaviour
 
         
 
-        if(NormalMap) CreateMap();
+        if(_CreateMap) CreateMap();
         
     }
 

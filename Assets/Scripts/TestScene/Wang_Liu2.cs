@@ -46,6 +46,8 @@ public class Wang_Liu2
     int[] kx = { 1, 0, -1, 0, 1, -1, -1, 1 };
 	int[] ky = { 0, 1, 0, -1, 1, 1, -1, -1 };
 
+    bool check;
+
 
     //Начало работы	
     protected void SetVariableValues(float[,] Z, ref float[,] Z_flat, ref int[,] depr, int Nx, int Ny)
@@ -140,7 +142,7 @@ public class Wang_Liu2
                 }
 			}
 		}
-	}
+    }
 
 
     //Поиск локальных понижений
@@ -153,6 +155,12 @@ public class Wang_Liu2
         {
             x = priorityQueue.Top(ref q);               //Извлечение первого элемента из очереди
             Z1 = x.priority;
+
+           // Debug.Log("============================================================");
+           // Debug.Log("Очередь после обработки PriorityQueue: )");
+           // Debug.Log(Z1);
+           // Debug.Log("============================================================");
+
             c1 = x.c;
             r1 = x.r;
 
@@ -160,6 +168,14 @@ public class Wang_Liu2
             for (int k = 0; k < kx.Length; k++)
             {
                 c2 = c1 + kx[k]; r2 = r1 + ky[k];
+
+                /*
+                if (c2 == 86 && r2 == 236)
+                {
+                    check = true;
+                }
+                */
+
                 if (c2 < 1 || c2 >= Nx || r2 < 1 || r2 >= Ny) continue;
                 if (Z[c2, r2] == NODATA) continue;
 
@@ -174,10 +190,10 @@ public class Wang_Liu2
                 if (mask[c2, r2] == 1 && depr[c1, r1] == 1 && depr[c2, r2] == -1 && Z_flat[c2, r2] == Z_flat[c1, r1])
                 {
                     depr[c2, r2] = -2;
-                    Debug.Log("Точка выхода в ячейке Z[" + c2 + " " + r2 + "]");
-                    q_out = q_out + 1;
+                    //Debug.Log("Точка выхода в ячейке Z[" + c2 + " " + r2 + "]");                    
                     out_list[q_out] = c1 * Ny + r1;         //"(c1 - 1) * Ny + r1" - в оригинале было так. Я же сделал
                                                             //поправку на то что в с# индексация начинается с нуля
+                    q_out = q_out + 1;
                 }
 
                 //Пропускаются соседи, которые уже «засветились» в очереди
@@ -197,7 +213,8 @@ public class Wang_Liu2
                     //Если точка, из которой мы пришли, не является понижением, маркируем её как точку выхода
                     if(depr[c1, r1] != 1)
                     {
-                        depr[c1, r1] = -2;                                                
+                        depr[c1, r1] = -2;
+                        //Debug.Log("Точка выхода в ячейке Z[" + c1 + " " + r1 + "]");
                         out_list[q_out] = c1 * Ny + r1;         //"(c1 - 1) * Ny + r1" - в оригинале было так. Я же сделал
                                                                 //поправку на то что в с# индексация начинается с нуля
                         q_out = q_out + 1;
@@ -209,7 +226,7 @@ public class Wang_Liu2
             mask[c1, r1] = 2;
 
             //Отображение процента выполнения
-            percent_complete = 100 * q2 / q_max;
+            percent_complete = (int)(100 * ((float)q2 / q_max));
             if(percent_complete > percent_0)
             {
                 Debug.Log("Searching for pits: " + percent_complete + "% DEM scanned");
