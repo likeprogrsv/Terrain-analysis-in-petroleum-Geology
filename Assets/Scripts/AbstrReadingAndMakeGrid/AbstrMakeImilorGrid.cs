@@ -18,10 +18,14 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     protected int[] triangles;
     Vector2[] uvs;
 
-    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\OG_A-OG_T3_smooth_10.is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
+    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\Otr_goriz_A___step_50m_H_A_260716.is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
+
 
     public bool smoothTerrain;
     public int numberOfSmoothingIterations = 2;
+
+    public bool FillDepressions;
+    public bool _CreateMap;
 
     public Material material;       //Grid(or mesh) material
     public bool coloredGradient;
@@ -41,8 +45,12 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
 
     protected float[] zValues;
     int gridMultiplier;
-    protected float minTerrainHeight = 9999;
-    protected float maxTerrainHeight = -9999;
+    protected float minTerrainHeight = 9999f;
+    protected float maxTerrainHeight = -9999f;
+    protected const float nodata = 9999f;
+
+    protected float[,] Z;               // Initial array for filling operations
+    protected float[,] Zout;            // Array after Filling depressions
 
     private Texture2D gradient, posGradient, negGradient;
     protected bool currentColorMode;
@@ -74,8 +82,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         Debug.Log("Xmin: " + xMin + " Ymin: " + yMin);
         Debug.Log("Reading file is DONE");
 
-        transform.Translate(xMin / cutCoordValues, 0, yMin / cutCoordValues);       //Setting starting coordinates values from grid settings
-
+        transform.Translate(xMin / cutCoordValues, 0, yMin / cutCoordValues);       //Setting starting coordinates values from grid settings        
 
         if (GridMultiplier == gridMultipl.PositiveGridValues)
         {
@@ -90,14 +97,22 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         GetCountXY();        
         MakeGrid();
 
+        Zout = CreateZout(gridSizeXactual, gridSizeYactual);
         ////////////CreateNormalMap(); 
 
 
         // Create color gradient
         currentColorMode = coloredGradient;
-        CreateGradients(coloredGradient);        
+        CreateGradients(coloredGradient);
 
+        //Переключатель по заполнению депрессий        
+        if (FillDepressions)
+        {
+            Filling filling = new Filling(Z, ref Zout, gridSizeXactual, gridSizeYactual, minTerrainHeight, maxTerrainHeight, cellsize, cellsize, nodata);
+            RecreateMesh(Zout);
+        }
 
+        if (_CreateMap) CreateMap();
 
         //Smooth terrain if you need
         if (smoothTerrain)
@@ -205,6 +220,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         vertices = new Vector3[(gridSizeX + 1) * (gridSizeY + 1)];
         triangles = new int[gridSizeX * gridSizeY * 6];
         uvs = new Vector2[vertices.Length];
+        Z = new float[gridSizeXactual, gridSizeYactual];
 
         //set tracker integers
         int v = 0;
@@ -224,6 +240,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
             {
                 vertices[v] = new Vector3(x * cellsize, gridMultiplier * zValues[v], z * cellsize);     //in previous version used "(x * cellsize) - vertexOffset"
                 uvs[v] = new Vector2(vertices[v].x / (float)gridSizeX / cellsize, vertices[v].z / (float)gridSizeY / cellsize);
+                Z[x, z] = zValues[v];
 
                 if(zValues[v] > maxTerrainHeight)
                     maxTerrainHeight = zValues[v];
@@ -255,6 +272,31 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
 
     }
 
+    protected float[,] CreateZout(int Nx, int Ny)
+    {
+        float[,] zOut = new float[Nx, Ny];
+        for (int y = 0; y < Ny; y++)
+        {
+            for (int x = 0; x < Nx; x++)
+            {
+                zOut[x, y] = nodata;
+            }
+        }
+        return zOut;
+    }
+
+    protected void RecreateMesh(float[,] Zout)
+    {
+        for (int i = 0, z = 0; z < gridSizeYactual; z++)
+        {
+            for (int x = 0; x < gridSizeXactual; x++)
+            {
+                vertices[i] = new Vector3(x * cellsize, Zout[x, z], z * cellsize);
+                i++;
+            }
+        }
+    }
+
     void SaveMeshAsAsset()
     {
         AssetDatabase.CreateAsset(mesh, "Assets/PrefabGrid.obj");
@@ -273,7 +315,6 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
         mesh.uv = uvs; 
         mesh.RecalculateNormals();
     }
-    
 
     protected virtual bool OnChange()                           // Default mode is nothing changes.
     {

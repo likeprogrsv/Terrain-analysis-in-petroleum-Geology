@@ -106,7 +106,7 @@ public class PriorityQueue
             q.buf = new List<Node>();              //??            
         }
 
-        
+
         if (q.buf.Count < q.n)
         {
             /*
@@ -125,7 +125,12 @@ public class PriorityQueue
 			}
 			*/
         }
+        else
+        {
+            q.buf[q.n - 1] = x;
+        }
 
+        
         i = q.n;
         
         while (i != 0)

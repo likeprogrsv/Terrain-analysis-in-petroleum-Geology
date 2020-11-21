@@ -89,7 +89,7 @@ public class Filling //: MeshGeneratorAbstr
             }
 
             //Отображение процента выполнения
-            percent_complete = 100 * q / numberOfOutlets;
+            percent_complete = (int)(100 * ((float)q / numberOfOutlets));
             if (percent_complete > percent_0)
             {
                 Debug.Log("Filling: " + percent_complete + "% completed");

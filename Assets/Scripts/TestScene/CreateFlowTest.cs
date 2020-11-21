@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CreateFlowTest : MeshGeneratorAbstr
+public class CreateFlowTest : AbstrMakeImilorGrid        //MeshGeneratorAbstr
 {
 
     public float amount = 0.0001f;
@@ -19,13 +19,13 @@ public class CreateFlowTest : MeshGeneratorAbstr
 
     protected override void CreateMap()
     {
-        float[,] waterMap = new float[Nx, Ny];
-        float[,,] outFlow = new float[Nx, Ny, 4];
-        _zOut = new float[Nx * Ny];
+        float[,] waterMap = new float[gridSizeXactual, gridSizeYactual];
+        float[,,] outFlow = new float[gridSizeXactual, gridSizeYactual, 4];
+        _zOut = new float[gridSizeXactual * gridSizeYactual];
 
-        for (int i = 0, z = 0; z < Ny; z++)
+        for (int i = 0, z = 0; z < gridSizeYactual; z++)
         {
-            for (int x = 0; x < Nx; x++)
+            for (int x = 0; x < gridSizeXactual; x++)
             {
                 _zOut[i] = Zout[x, z];
                 i++;
@@ -33,24 +33,24 @@ public class CreateFlowTest : MeshGeneratorAbstr
         }
 
 
-        FillWaterMap(amount, waterMap, Nx, Ny);
+        FillWaterMap(amount, waterMap, gridSizeXactual, gridSizeYactual);
 
         for (int i = 0; i < iterationsNumber; i++)
         {
-            ComputeOutFlow(waterMap, outFlow, _zOut, Nx, Ny);
-            UpdateWaterMap(waterMap, outFlow, Nx, Ny);
+            ComputeOutFlow(waterMap, outFlow, _zOut, gridSizeXactual, gridSizeYactual);
+            UpdateWaterMap(waterMap, outFlow, gridSizeXactual, gridSizeYactual);
         }
 
-        float[,] velocityMap = new float[Nx, Ny];
+        float[,] velocityMap = new float[gridSizeXactual, gridSizeYactual];
 
-        CalculateVelocityField(velocityMap, outFlow, Nx, Ny);
-        NormalizeMap(velocityMap, Nx, Ny);
+        CalculateVelocityField(velocityMap, outFlow, gridSizeXactual, gridSizeYactual);
+        NormalizeMap(velocityMap, gridSizeXactual, gridSizeYactual);
 
-        Texture2D flowMap = new Texture2D(Nx, Ny);
+        Texture2D flowMap = new Texture2D(gridSizeXactual, gridSizeYactual);
 
-        for (int y = 0; y < Ny; y++)
+        for (int y = 0; y < gridSizeYactual; y++)
         {
-            for (int x = 0; x < Nx; x++)
+            for (int x = 0; x < gridSizeXactual; x++)
             {
                 float v = velocityMap[x, y];
                 flowMap.SetPixel(x, y, new Color(v, v, v, 1));
@@ -58,7 +58,7 @@ public class CreateFlowTest : MeshGeneratorAbstr
         }
 
         flowMap.Apply();
-        m_material.mainTexture = flowMap;
+        material.mainTexture = flowMap;
     }
 
 
