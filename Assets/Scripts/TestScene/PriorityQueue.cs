@@ -148,7 +148,12 @@ public class PriorityQueue
 
         while (i != 0)
         {
-            i = i / 2;            
+            if (i % 2 == 0)
+            {
+                i = i / 2 - 1;
+            }
+            else i = i / 2;            
+
             SiftDown(ref q, i);
             if (i == 0) break;
         }        
@@ -160,6 +165,8 @@ public class PriorityQueue
         //Queue queue = q;
         Node result = new Node();
         result = q.buf[0];
+        //Debug.Log("___ " + q.buf[0].priority + " ___");
+
         q.buf[0] = q.buf[q.n - 1];
         q.n = q.n - 1;
         SiftDown(ref q, 0);        
