@@ -326,17 +326,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 641910412}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62462bb60d6c9d94bb864068a5c70554, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   smoothTerrain: 0
   numberOfSmoothingIterations: 2
-  FillDepressions: 0
+  FillDepressions: 1
   _CreateMap: 1
   material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
-  coloredGradient: 0
+  coloredGradient: 1
   cellsize: 15
   GridMultiplier: 0
   curvatureType: 1
@@ -444,7 +444,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 641910412}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e21c9475ce914148bf210c7b7c48f52, type: 3}
   m_Name: 
@@ -455,7 +455,7 @@ MonoBehaviour:
   _CreateMap: 1
   material: {fileID: 2100000, guid: fb5cd7c8642ce80469395697b0f9b19d, type: 2}
   coloredGradient: 0
-  cellsize: 5
+  cellsize: 50
   GridMultiplier: 0
   amount: 0.0001
   iterationsNumber: 5

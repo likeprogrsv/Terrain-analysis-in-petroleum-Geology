@@ -37,8 +37,10 @@ public class PriorityQueue
         //List<Node> x = q.buf;
         parent = a;
 
-        while(parent * 2 <= q.n)
+        while (parent * 2 + 1 <= q.n)
+        //while (child <= q.n)
         {
+            /*
             if (parent != 0)
             {
                 child = (parent * 2) - 1;
@@ -46,8 +48,14 @@ public class PriorityQueue
             } 
             //Попробовать использовать условие И ПОМЕНЯТЬ ИНДЕКСЫ В ОСТАЛЬНЫХ МЕСТАХ
             else child = 1;
+            */
 
-            if(child + 1 < q.n)                     //было   if(child + 1 <= queue.n)
+
+            //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+            //parent = (int)Mathf.Floor((float)((a - 1) / 2));
+
+            child = 2 * parent + 1;
+            if (child + 1 < q.n)                     //было   if(child + 1 <= queue.n)
             {
                 if(q.buf[child + 1].priority < q.buf[child].priority)
                 {
@@ -62,12 +70,16 @@ public class PriorityQueue
                 }
             }
 
-            if (q.buf[parent].priority > q.buf[child].priority)
+            //////////////////////////////////////////////////////////
+            //	if (q.buf[parent].priority > q.buf[child].priority)	//  Строка ниже была такой		
+            //////////////////////////////////////////////////////////
+
+            if (child < q.n && q.buf[parent].priority > q.buf[child].priority)
             {
                 Swap<Node>(ref q.buf, child, parent);
                 parent = child;
             }
-            else if (q.buf[parent].priority == q.buf[child].priority)
+            else if (child < q.n && q.buf[parent].priority == q.buf[child].priority)
             {
                 if (q.buf[parent].priority2 > q.buf[child].priority2)
                 {
@@ -130,14 +142,15 @@ public class PriorityQueue
             q.buf[q.n - 1] = x;
         }
 
-        
-        i = q.n;
-        
+
+        //i = q.n;
+        i = q.n - 1;
+
         while (i != 0)
         {
-            i = i / 2;
-            if (i == 0) break;
+            i = i / 2;            
             SiftDown(ref q, i);
+            if (i == 0) break;
         }        
     }     
 

@@ -18,7 +18,7 @@ public abstract class AbstrMakeImilorGrid : MonoBehaviour
     protected int[] triangles;
     Vector2[] uvs;
 
-    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\Otr_goriz_A___step_50m_H_A_260716.is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
+    string filePath = @"E:\GitRepositories\Terrain-analysis-in-petroleum-Geology\GridSFile\step_1000m_OG_A - OG_T3 (сглаженная 10x).is-txt";            //OG_A_(10+15)_subtruct_OG_T(10+15)100m         //H_A_step_50m
 
 
     public bool smoothTerrain;
